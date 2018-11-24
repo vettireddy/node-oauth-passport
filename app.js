@@ -3,11 +3,20 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var dotenv = require('dotenv');
+var session = require('express-session');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var routes = require('./routes');
+var passport = require('./configs/passport');
+
 
 var app = express();
+
+// configuring dotenvfile
+dotenv.config();
+
+// establishing connection to mongodb
+require('./configs/db');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -17,10 +26,12 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
